@@ -10,7 +10,8 @@
  * Error checking and management                                              *
  ******************************************************************************/
 bool is_valid_ip(byte_t b0, byte_t b1, byte_t b2, byte_t b3,
-                 byte_t cidr) {
+                 byte_t cidr)
+{
     /* checking CIDR validity */
     if (UNDEF_CIDR != cidr && INVAL_CIDR == cidr) return false;
 
@@ -77,7 +78,8 @@ unsigned int count_set_bits(byte_t b0, byte_t b1, byte_t b2, byte_t b3)
  * or the CIDR field which must differ from UNDEF_CIDR.
  * @return a subnet_mask_t struct containing the dot.decimal subnet mask.
  */
-subnet_mask_t cidr_to_dotdecimal(ipaddr_t ip_address) {
+subnet_mask_t cidr_to_dotdecimal(ipaddr_t ip_address)
+{
     if (ip_address.cidr == 0)
         return (subnet_mask_t) {
                 .b0 = 0,
@@ -205,7 +207,8 @@ ipaddr_t ip_calculate_subnet(const ipaddr_t ip_address)
  * @param ip_address the ipaddr_t struct containing a valid IP address.
  * @param ip_string the pre-allocated byte char string.
  */
-void ipaddr_to_string(ipaddr_t ip_address, char ip_string[]) {
+void ipaddr_to_string(ipaddr_t ip_address, char ip_string[])
+{
     /* string null check */
     if (NULL == ip_string) null_fail();
     /* ip validity check */
