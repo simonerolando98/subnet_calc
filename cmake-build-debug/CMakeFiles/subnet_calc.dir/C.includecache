@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/sr0x1/source/repos/c/subnet_calc/subnet.c
+subnet.h
+/Users/sr0x1/source/repos/c/subnet_calc/subnet.h
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+stdbool.h
+-
+math.h
+-
+
+/Users/sr0x1/source/repos/c/subnet_calc/subnet.h
+

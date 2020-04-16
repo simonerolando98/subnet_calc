@@ -1,0 +1,3 @@
+/Users/sr0x1/source/repos/c/subnet_calc/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/sr0x1/source/repos/c/subnet_calc/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/sr0x1/source/repos/c/subnet_calc/cmake-build-debug/CMakeFiles/subnet_calc.dir
