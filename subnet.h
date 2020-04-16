@@ -25,7 +25,7 @@
 
 
 /* byte data type definition */
-typedef unsigned char byte_t;
+typedef unsigned short byte_t;
 
 /* IP address definition */
 typedef struct {
@@ -68,6 +68,6 @@ ipaddr_t string_create_ip(const char ip_string[]);
  * @param ip_address an ipaddr_t struct containing the correctly formed IP address.
  * @return a subnet_mask_t struct containing the calculated subnet mask.
  */
-ipaddr_t ip_calculate_subnet(const ipaddr_t ip_address);
+ipaddr_t ip_calculate_subnet(ipaddr_t ip_address);
 
 #endif

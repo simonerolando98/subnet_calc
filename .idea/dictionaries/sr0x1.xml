@@ -3,6 +3,9 @@
     <words>
       <w>inval</w>
       <w>ipaddr</w>
+      <w>sscanf</w>
+      <w>strtoul</w>
+      <w>uints</w>
     </words>
   </dictionary>
 </component>

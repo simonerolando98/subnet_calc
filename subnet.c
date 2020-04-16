@@ -3,18 +3,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <math.h>
+#include <errno.h>
+
 
 /******************************************************************************
  * Error checking and management                                              *
  ******************************************************************************/
 bool is_valid_ip(byte_t b0, byte_t b1, byte_t b2, byte_t b3,
-        byte_t cidr)
-{
-    return ((UNDEF_CIDR != cidr && (cidr < MIN_CIDR || cidr > MAX_CIDR) &&
-        INVAL_CIDR != cidr) || b0 < MIN_BLOCK || b0 > MAX_BLOCK ||
-        b1 < MIN_BLOCK || b1 > MAX_BLOCK || b2 < MIN_BLOCK ||
-        b2 > MAX_BLOCK || b3 < MIN_BLOCK || b3 > MAX_BLOCK);
+                 byte_t cidr) {
+    /* checking CIDR validity */
+    if (UNDEF_CIDR != cidr && INVAL_CIDR == cidr) return false;
+
+    return ((b0 > MIN_BLOCK && b0 < MAX_BLOCK) &&
+            (b1 > MIN_BLOCK && b1 < MAX_BLOCK) &&
+            (b2 > MIN_BLOCK && b2 < MAX_BLOCK) &&
+            (b3 > MIN_BLOCK && b3 < MAX_BLOCK) &&
+            (cidr > MIN_CIDR && cidr < MAX_CIDR));
 }
 
 bool is_valid_struct(ipaddr_t ip)
@@ -83,15 +87,16 @@ subnet_mask_t cidr_to_subnet_mask(ipaddr_t ip_address)
             0,
     };
 
-    /* converting struct to byte array */
-    byte_t *sub_array = (byte_t*)&netmask;
+    unsigned int bits = 0;
+    unsigned int i;
+    for (i = MAX_CIDR - bit_count; i < MAX_CIDR; i++)
+        bits |= (1U << i);
 
-    int i = 0;
-    while (bit_count > -1) {
-        sub_array[i] |= (byte_t) abs(bit_count - 8);
-        bit_count -= 8;
-        i++;
-    }
+    netmask.b0 = (bits & (unsigned) 0xff000000) >> (unsigned) 24;
+    netmask.b1 = (bits & (unsigned) 0xff0000) >> (unsigned) 16;
+    netmask.b2 = (bits & (unsigned) 0xff00) >> (unsigned) 8;
+    netmask.b3 = (bits & (unsigned) 0xff);
+    netmask.cidr = ip_address.cidr;
 
     return netmask;
 }
@@ -127,17 +132,19 @@ ipaddr_t block_create_ip(byte_t b0, byte_t b1, byte_t b2, byte_t b3,
  */
 ipaddr_t string_create_ip(const char ip_string[])
 {
+    /* separators */
     const char* sep = "./";
+
     char* ip_str = (char*)ip_string;
     /* string null check */
     if (NULL == ip_string) null_fail();
 
     /* temp storage vars */
-    unsigned short b0, b1, b2, b3, cidr = UNDEF_CIDR;
+    unsigned short b0, b1, b2, b3, cidr;
     /* trying conversion */
     char* blocks[5];
     int i = 0;
-    char* tok = ip_str;
+    char *tok;
 
     /* manually parsing string, sscanf will fail parsing uints */
     while (i < 5) {
@@ -146,35 +153,14 @@ ipaddr_t string_create_ip(const char ip_string[])
         i++;
     }
 
-    /* converting with format read */
-    int result = 0;
-    result += sscanf(blocks[0], "%hu", &b0);
-    result += sscanf(blocks[1], "%hu", &b1);
-    result += sscanf(blocks[2], "%hu", &b2);
-    result += sscanf(blocks[3], "%hu", &b3);
-    result += sscanf(blocks[4], "%hu", &cidr);
+    /* converting with strtoul */
+    if ((b0 = strtoul(blocks[0], NULL, 10)) == 0 && errno == EINVAL) invalid_fail();
+    if ((b1 = strtoul(blocks[1], NULL, 10)) == 0 && errno == EINVAL) invalid_fail();
+    if ((b2 = strtoul(blocks[2], NULL, 10)) == 0 && errno == EINVAL) invalid_fail();
+    if ((b3 = strtoul(blocks[3], NULL, 10)) == 0 && errno == EINVAL) invalid_fail();
+    if ((cidr = strtoul(blocks[4], NULL, 10)) == 0 && errno == EINVAL) cidr = UNDEF_CIDR;
 
-    /* based on conversion result, take action */
-    ipaddr_t ip = {};
-    if (result == 5) {
-        /* building with CIDR */
-        ip.b0 = b0;
-        ip.b1 = b1;
-        ip.b2 = b2;
-        ip.b3 = b3;
-        ip.cidr = cidr;
-    } else if (result == 4) {
-        /* building without CIDR */
-        ip.b0 = b0;
-        ip.b1 = b1;
-        ip.b2 = b2;
-        ip.b3 = b3;
-        ip.cidr = UNDEF_CIDR;
-    } else {
-        invalid_fail();
-    }
-
-    return ip;
+    return (ipaddr_t) {b0, b1, b2, b3, cidr};
 }
 
 /**
@@ -186,7 +172,7 @@ ipaddr_t string_create_ip(const char ip_string[])
 ipaddr_t ip_calculate_subnet(const ipaddr_t ip_address)
 {
     /* invalid IP struct */
-    if (!is_valid_struct(ip_address)); //invalid_fail();
+    if (!is_valid_struct(ip_address)) invalid_fail();
 
     /* performing calculations */
     subnet_mask_t netmask = cidr_to_subnet_mask(ip_address);
