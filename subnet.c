@@ -14,11 +14,17 @@ bool is_valid_ip(byte_t b0, byte_t b1, byte_t b2, byte_t b3,
     /* checking CIDR validity */
     if (UNDEF_CIDR != cidr && INVAL_CIDR == cidr) return false;
 
-    return ((b0 > MIN_BLOCK && b0 < MAX_BLOCK) &&
-            (b1 > MIN_BLOCK && b1 < MAX_BLOCK) &&
-            (b2 > MIN_BLOCK && b2 < MAX_BLOCK) &&
-            (b3 > MIN_BLOCK && b3 < MAX_BLOCK) &&
-            (cidr > MIN_CIDR && cidr < MAX_CIDR));
+    /* constraints check */
+    bool constraints = ((b0 >= MIN_BLOCK && b0 <= MAX_BLOCK) &&
+                        (b1 >= MIN_BLOCK && b1 <= MAX_BLOCK) &&
+                        (b2 >= MIN_BLOCK && b2 <= MAX_BLOCK) &&
+                        (b3 >= MIN_BLOCK && b3 <= MAX_BLOCK));
+
+    /* CIDR constraints check if defined */
+    if (UNDEF_CIDR != cidr)
+        return (cidr >= MIN_CIDR && cidr <= MAX_CIDR);
+    else
+        return constraints;
 }
 
 bool is_valid_struct(ipaddr_t ip)
@@ -65,15 +71,21 @@ unsigned int count_set_bits(byte_t b0, byte_t b1, byte_t b2, byte_t b3)
     return bit_count;
 }
 
-subnet_mask_t cidr_to_subnet_mask(ipaddr_t ip_address)
-{
-    if (ip_address.cidr == 0) return (subnet_mask_t) {
-        .b0 = 0,
-        .b1 = 0,
-        .b2 = 0,
-        .b3 = 0,
-        .cidr = 0
-    };
+/**
+ * Return a dot.decimal subnet mask calculated via CIDR rules.
+ * @param ip_address the ipaddr_t struct containing an IP address with CIDR notation
+ * or the CIDR field which must differ from UNDEF_CIDR.
+ * @return a subnet_mask_t struct containing the dot.decimal subnet mask.
+ */
+subnet_mask_t cidr_to_dotdecimal(ipaddr_t ip_address) {
+    if (ip_address.cidr == 0)
+        return (subnet_mask_t) {
+                .b0 = 0,
+                .b1 = 0,
+                .b2 = 0,
+                .b3 = 0,
+                .cidr = 0
+        };
 
     /* total bit count is CIDR */
     int bit_count = ip_address.cidr;
@@ -96,7 +108,7 @@ subnet_mask_t cidr_to_subnet_mask(ipaddr_t ip_address)
     netmask.b1 = (bits & (unsigned) 0xff0000) >> (unsigned) 16;
     netmask.b2 = (bits & (unsigned) 0xff00) >> (unsigned) 8;
     netmask.b3 = (bits & (unsigned) 0xff);
-    netmask.cidr = ip_address.cidr;
+    netmask.cidr = UNDEF_CIDR;
 
     return netmask;
 }
@@ -164,7 +176,7 @@ ipaddr_t string_create_ip(const char ip_string[])
 }
 
 /**
- * Calculate and return a subnet mask based on the provided IP. If no CIDR is
+ * Calculate and return a subnet based on the provided IP. If no CIDR is
  * provided, calculation will fail with an error.
  * @param ip_address an ipaddr_t struct containing the correctly formed IP address.
  * @return a subnet_mask_t struct containing the calculated subnet mask.
@@ -175,7 +187,7 @@ ipaddr_t ip_calculate_subnet(const ipaddr_t ip_address)
     if (!is_valid_struct(ip_address)) invalid_fail();
 
     /* performing calculations */
-    subnet_mask_t netmask = cidr_to_subnet_mask(ip_address);
+    subnet_mask_t netmask = cidr_to_dotdecimal(ip_address);
 
     ipaddr_t subnet = {
             ip_address.b0 & netmask.b0,
@@ -188,4 +200,30 @@ ipaddr_t ip_calculate_subnet(const ipaddr_t ip_address)
     return subnet;
 }
 
+/**
+ * Convert an ipaddr_t IP Address struct to a printable string (char[]).
+ * @param ip_address the ipaddr_t struct containing a valid IP address.
+ * @param ip_string the pre-allocated byte char string.
+ */
+void ipaddr_to_string(ipaddr_t ip_address, char ip_string[]) {
+    /* string null check */
+    if (NULL == ip_string) null_fail();
+    /* ip validity check */
+    if (!is_valid_struct(ip_address)) invalid_fail();
 
+    /* formatted print on string */
+    if (ip_address.cidr != UNDEF_CIDR) {
+        sprintf(ip_string, "%hu.%hu.%hu.%hu/%hu",
+                ip_address.b0,
+                ip_address.b1,
+                ip_address.b2,
+                ip_address.b3,
+                ip_address.cidr);
+    } else {
+        sprintf(ip_string, "%hu.%hu.%hu.%hu",
+                ip_address.b0,
+                ip_address.b1,
+                ip_address.b2,
+                ip_address.b3);
+    }
+}

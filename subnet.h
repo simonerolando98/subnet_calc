@@ -23,6 +23,8 @@
 #define MIN_CIDR 0x00
 #define MAX_CIDR 0x20
 
+/* IP string safe length */
+#define IP_LENGTH 0x40
 
 /* byte data type definition */
 typedef unsigned short byte_t;
@@ -69,5 +71,20 @@ ipaddr_t string_create_ip(const char ip_string[]);
  * @return a subnet_mask_t struct containing the calculated subnet mask.
  */
 ipaddr_t ip_calculate_subnet(ipaddr_t ip_address);
+
+/**
+ * Return a dot.decimal subnet mask calculated via CIDR rules.
+ * @param ip_address the ipaddr_t struct containing an IP address with CIDR notation
+ * or the CIDR field which must differ from UNDEF_CIDR.
+ * @return a subnet_mask_t struct containing the dot.decimal subnet mask.
+ */
+subnet_mask_t cidr_to_dotdecimal(ipaddr_t ip_address);
+
+/**
+ * Convert an ipaddr_t IP Address struct to a printable string (char[]).
+ * @param ip_address the ipaddr_t struct containing a valid IP address.
+ * @param ip_string the pre-allocated byte char string.
+ */
+void ipaddr_to_string(ipaddr_t ip_address, char ip_string[]);
 
 #endif

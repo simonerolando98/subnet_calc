@@ -17,7 +17,7 @@ string.h
 -
 stdbool.h
 -
-math.h
+errno.h
 -
 
 /Users/sr0x1/source/repos/c/subnet_calc/subnet.h
