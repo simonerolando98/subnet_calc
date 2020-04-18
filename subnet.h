@@ -26,6 +26,9 @@
 /* IP string safe length */
 #define IP_LENGTH 0x40
 
+/* default init value */
+#define INIT 0x00
+
 /* byte data type definition */
 typedef unsigned short byte_t;
 
@@ -39,7 +42,12 @@ typedef struct {
 } ipaddr_t;
 
 /* subnet type alias */
-typedef ipaddr_t subnet_mask_t;
+typedef struct {
+    byte_t b0;
+    byte_t b1;
+    byte_t b2;
+    byte_t b3;
+} subnet_mask_t;
 
 /******************************************************************************
  * Utility functions for conversion and initialization of data                *
@@ -86,5 +94,19 @@ subnet_mask_t cidr_to_dotdecimal(ipaddr_t ip_address);
  * @param ip_string the pre-allocated byte char string.
  */
 void ipaddr_to_string(ipaddr_t ip_address, char ip_string[]);
+
+/**
+ * Convert a subnet_mask_t Subnet Mask struct to a printable string (char[]).
+ * @param subnet_mask a subnet_mask_t struct containing the dotdecimal netmask.
+ * @param netmask_str pre-allocated byte char string.
+ */
+void subnet_mask_to_string(subnet_mask_t subnet_mask, char netmask_str[]);
+
+/**
+ * Convert a dot decimal notation subnet mask to CIDR value.
+ * @param subnet_mask an ipaddr_t struct containing the IP address with CIDR.
+ * @return a byte_t containing the correct CIDR value 
+ */
+byte_t dotdecimal_to_cidr(subnet_mask_t subnet_mask);
 
 #endif
